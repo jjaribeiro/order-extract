@@ -126,8 +126,25 @@ function wordOverlapScore(a, b) {
   return matches / Math.max(wordsA.size, wordsB.size);
 }
 
-function findBestMatch(description, refs, threshold = 0.45) {
-  if (!description || !refs.length) return null;
+function findBestMatch(description, refCliente, refs, threshold = 0.45) {
+  if (!refs.length) return null;
+
+  // 1st priority: exact match on ref number (client ref exists in our refs)
+  if (refCliente) {
+    const normalRef = normalize(refCliente);
+    const exactRef = refs.find(r => normalize(r.ref) === normalRef);
+    if (exactRef) return { ...exactRef, score: 1, matchType: "ref" };
+  }
+
+  // 2nd priority: ref number appears anywhere in the description
+  if (refCliente) {
+    const normalRef = normalize(refCliente);
+    const inDesc = refs.find(r => normalize(r.ref) === normalRef);
+    if (inDesc) return { ...inDesc, score: 1, matchType: "ref" };
+  }
+
+  // 3rd priority: description word overlap
+  if (!description) return null;
   let best = null;
   let bestScore = 0;
   for (const ref of refs) {
@@ -137,7 +154,7 @@ function findBestMatch(description, refs, threshold = 0.45) {
       best = ref;
     }
   }
-  return bestScore >= threshold ? { ...best, score: bestScore } : null;
+  return bestScore >= threshold ? { ...best, score: bestScore, matchType: "desc" } : null;
 }
 
 function parseRefsFromCSV(text) {
@@ -177,7 +194,7 @@ function buildRows(extractions, refs) {
     };
     for (const linha of (ext.linhas || [])) {
       // Try to find internal ref
-      const match = refs.length > 0 ? findBestMatch(linha.designacao, refs) : null;
+      const match = refs.length > 0 ? findBestMatch(linha.designacao, linha.ref_cliente, refs) : null;
       const row = {
         ...header,
         ref_interna: match ? match.ref : null,
