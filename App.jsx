@@ -9,6 +9,8 @@ const HEADER_FIELDS = [
   { key: "compromisso",    label: "Compromisso" },
   { key: "cabimento",      label: "Cabimento" },
   { key: "num_contrato",   label: "Nº Concurso" },
+  { key: "nif_cliente",     label: "NIF Cliente" },
+  { key: "morada_entrega",  label: "Morada Entrega" },
 ];
 
 const LINE_FIELDS = [
@@ -41,6 +43,8 @@ Formato JSON:
   "compromisso": "número de compromisso se existir, senão null",
   "cabimento": "número de cabimento se existir, senão null",
   "num_contrato": "número de procedimento/contrato/concurso se existir, senão null",
+  "nif_cliente": "NIF/número de contribuinte do cliente/entidade emissora se existir, senão null",
+  "morada_entrega": "morada/local de entrega indicado no documento se existir, senão null",
   "linhas": [
     {
       "cod_artigo": "código do artigo do cliente",
@@ -191,6 +195,8 @@ function buildRows(extractions, refs) {
       compromisso: ext.compromisso,
       cabimento: ext.cabimento,
       num_contrato: ext.num_contrato,
+      nif_cliente: ext.nif_cliente,
+      morada_entrega: ext.morada_entrega,
     };
     for (const linha of (ext.linhas || [])) {
       // Try to find internal ref
