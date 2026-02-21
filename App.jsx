@@ -7,7 +7,6 @@ const HEADER_FIELDS = [
   { key: "num_encomenda",  label: "Nº Encomenda" },
   { key: "data_encomenda", label: "Data Encomenda" },
   { key: "compromisso",    label: "Compromisso" },
-  { key: "cabimento",      label: "Cabimento" },
   { key: "num_contrato",   label: "Nº Concurso" },
   { key: "nif_cliente",     label: "NIF Cliente" },
   { key: "morada_entrega",  label: "Morada Entrega" },
@@ -16,14 +15,11 @@ const HEADER_FIELDS = [
 const LINE_FIELDS = [
   { key: "ref_interna",      label: "Ref. Interna" },
   { key: "cod_artigo",       label: "Cód. Artigo Cliente" },
-  { key: "ref_cliente",      label: "Ref. Cliente" },
   { key: "designacao",       label: "Designação" },
   { key: "quantidade_total", label: "Qtd Total" },
   { key: "unidade",          label: "Unidade" },
   { key: "preco_unitario",   label: "Preço Unit. s/IVA" },
-  { key: "iva",              label: "IVA (%)" },
   { key: "total_sem_iva",    label: "Total s/IVA" },
-  { key: "total_com_iva",    label: "Total c/IVA" },
 ];
 
 // ─── PROMPT ──────────────────────────────────────────────────────────────────
@@ -41,21 +37,17 @@ Formato JSON:
   "num_encomenda": "número da nota de encomenda",
   "data_encomenda": "data da encomenda",
   "compromisso": "número de compromisso se existir, senão null",
-  "cabimento": "número de cabimento se existir, senão null",
   "num_contrato": "número de procedimento/contrato/concurso se existir, senão null",
   "nif_cliente": "NIF/número de contribuinte do cliente/entidade emissora se existir, senão null",
   "morada_entrega": "morada/local de entrega indicado no documento se existir, senão null",
   "linhas": [
     {
       "cod_artigo": "código do artigo do cliente",
-      "ref_cliente": "referência do fornecedor/cliente se existir (Refª: ...), senão null",
-      "designacao": "descrição completa do artigo",
+      "designacao": "descrição completa do artigo — incluindo quaisquer referências, códigos ou números que apareçam na linha ou junto ao artigo",
       "quantidade_total": "quantidade total da linha",
       "unidade": "unidade",
       "preco_unitario": "preço unitário sem IVA",
-      "iva": "taxa IVA em %",
       "total_sem_iva": "total sem IVA",
-      "total_com_iva": "total com IVA se disponível",
       "entregas": [
         { "data": "YYYY-MM-DD", "quantidade": "quantidade desta entrega" }
       ]
@@ -196,27 +188,23 @@ function buildRows(extractions, refs) {
       num_encomenda: ext.num_encomenda,
       data_encomenda: ext.data_encomenda,
       compromisso: ext.compromisso,
-      cabimento: ext.cabimento,
       num_contrato: ext.num_contrato,
       nif_cliente: ext.nif_cliente,
       morada_entrega: ext.morada_entrega,
     };
     for (const linha of (ext.linhas || [])) {
       // Try to find internal ref
-      const match = refs.length > 0 ? findBestMatch(linha.designacao, linha.ref_cliente, refs) : null;
+      const match = refs.length > 0 ? findBestMatch(linha.designacao, linha.cod_artigo, refs) : null;
       const row = {
         ...header,
         ref_interna: match ? match.ref : null,
-        _ref_missing: !match, // flag for red highlight
+        _ref_missing: !match,
         cod_artigo: linha.cod_artigo,
-        ref_cliente: linha.ref_cliente,
         designacao: linha.designacao,
         quantidade_total: linha.quantidade_total,
         unidade: linha.unidade,
         preco_unitario: linha.preco_unitario,
-        iva: linha.iva,
         total_sem_iva: linha.total_sem_iva,
-        total_com_iva: linha.total_com_iva,
       };
       for (let i = 0; i < numDeliveries; i++) {
         const ent = (linha.entregas || [])[i];
