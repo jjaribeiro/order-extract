@@ -133,18 +133,21 @@ function wordOverlapScore(a, b) {
 function findBestMatch(description, refCliente, refs, threshold = 0.45) {
   if (!refs.length) return null;
 
-  // 1st priority: exact match on ref number (client ref exists in our refs)
+  // 1st priority: exact match on client ref field
   if (refCliente) {
     const normalRef = normalize(refCliente);
     const exactRef = refs.find(r => normalize(r.ref) === normalRef);
     if (exactRef) return { ...exactRef, score: 1, matchType: "ref" };
   }
 
-  // 2nd priority: ref number appears anywhere in the description
-  if (refCliente) {
-    const normalRef = normalize(refCliente);
-    const inDesc = refs.find(r => normalize(r.ref) === normalRef);
-    if (inDesc) return { ...inDesc, score: 1, matchType: "ref" };
+  // 2nd priority: our ref appears anywhere inside the description text
+  if (description) {
+    const normalDesc = normalize(description);
+    const inDesc = refs.find(r => {
+      const normalRef = normalize(r.ref);
+      return normalRef.length >= 4 && normalDesc.includes(normalRef);
+    });
+    if (inDesc) return { ...inDesc, score: 1, matchType: "ref_in_desc" };
   }
 
   // 3rd priority: description word overlap
